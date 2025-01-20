@@ -1,4 +1,4 @@
-FROM ghcr.io/ublue-os/arch-distrobox AS bazzite-arch
+FROM ghcr.io/ublue-os/arch-distrobox AS okadora-arch
 
 COPY system_files /
 
@@ -37,18 +37,8 @@ RUN pacman -Syu \
         noto-fonts-cjk \
         glibc-locales \
         --noconfirm && \
-    pacman -S \
-        steam \
-        lutris \
-        mangohud \
-        lib32-mangohud \
-        --noconfirm && \
-        wget https://raw.githubusercontent.com/Shringe/LatencyFleX-Installer/main/install.sh -O /usr/bin/latencyflex && \
-        sed -i 's@"dxvk.conf"@"/usr/share/latencyflex/dxvk.conf"@g' /usr/bin/latencyflex && \
-        chmod +x /usr/bin/latencyflex && \
     pacman -S --clean --clean && \
     rm -rf /var/cache/pacman/pkg/*
-        # Steam/Lutris/Wine installed separately so they use the dependencies above and don't try to install their own.
 
 # Create build user
 RUN useradd -m --shell=/bin/bash build && usermod -L build && \
@@ -59,13 +49,9 @@ RUN useradd -m --shell=/bin/bash build && usermod -L build && \
 USER build
 WORKDIR /home/build
 RUN paru -S \
-        aur/protontricks \
-        aur/vkbasalt \
-        aur/lib32-vkbasalt \
         aur/obs-vkcapture-git \
         aur/lib32-obs-vkcapture-git \
         aur/lib32-gperftools \
-        aur/steamcmd \
         --noconfirm
 USER root
 WORKDIR /
@@ -73,7 +59,6 @@ WORKDIR /
 # Cleanup
 # Native march & tune. This is a gaming image and not something a user is going to compile things in with the intent to share.
 # We do this last because it'll only apply to updates the user makes going forward. We don't want to optimize for the build host's environment.
-RUN sed -i 's@ (Runtime)@@g' /usr/share/applications/steam.desktop && \
     sed -i 's/-march=x86-64 -mtune=generic/-march=native -mtune=native/g' /etc/makepkg.conf && \
     userdel -r build && \
     rm -drf /home/build && \
@@ -84,7 +69,7 @@ RUN sed -i 's@ (Runtime)@@g' /usr/share/applications/steam.desktop && \
         /tmp/* \
         /var/cache/pacman/pkg/*
 
-FROM bazzite-arch as bazzite-arch-gnome
+FROM okadora-arch as okadora-arch-gnome
 
 # Replace KDE portal with GNOME portal, swap included icon theme.
 RUN sed -i 's/-march=native -mtune=native/-march=x86-64 -mtune=generic/g' /etc/makepkg.conf && \
